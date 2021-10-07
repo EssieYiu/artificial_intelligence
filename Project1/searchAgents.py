@@ -308,6 +308,7 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        self.reachedCorners = (0,0,0,0)
 
     def getStartState(self):
         """
@@ -315,14 +316,29 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.startingPosition in self.reachedCorners:
+            self.reachedCorners[self.startingPosition] = 1
+        
+        return (self.startingPosition, (self.corners,self.reachedCorners))
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #如果是站在最后一个角落的点，则不用再expand
+        curPos = state[0]
+        print("state[0]",state[0],"  state[1]:",state[1], "  state[1][1]:",state[1][1])
+        current_reached_corners = list(state[1][1])
+        corner_pos_list = list(self.corners)
+        if curPos in self.corners:
+            idx = corner_pos_list.index(curPos)
+            current_reached_corners[idx] = 1
+        for item in current_reached_corners:
+            if item == 0:
+                return False
+        return True
+
 
     def expand(self, state):
         """
@@ -340,6 +356,15 @@ class CornersProblem(search.SearchProblem):
             # Add a child state to the child list if the action is legal
             # You should call getActions, getActionCost, and getNextState.
             "*** YOUR CODE HERE ***"
+            next_state = self.getNextState(state,action)
+            children.append((next_state,action,1))
+
+        curPos = state[0]
+        corner_pos_list = list(self.corners)
+        current_reached_corners = list(state[1][1])
+        if curPos in self.corners:
+            idx = corner_pos_list.index(curPos)
+            current_reached_corners[idx] = 1
 
         self._expanded += 1 # DO NOT CHANGE
         return children
@@ -367,9 +392,12 @@ class CornersProblem(search.SearchProblem):
         dx, dy = Actions.directionToVector(action)
         nextx, nexty = int(x + dx), int(y + dy)
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
         # you will need to replace the None part of the following tuple.
-        return ((nextx, nexty), None)
+        current_reached_corners = list(state[1][1])
+        if (nextx, nexty) in self.corners:
+            idx = self.corners.index((nextx,nexty))
+            current_reached_corners[idx] = 1
+        return ((nextx, nexty), (self.corners,tuple(current_reached_corners)))
 
     def getCostOfActionSequence(self, actions):
         """

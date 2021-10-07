@@ -17,6 +17,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+from sys import path
 import util
 
 class SearchProblem:
@@ -113,12 +114,69 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #注意不要多次同一个节点调用expand函数，每次expand之后记录其子节点用一个东西存起来
+    frontier = util.Stack()
+    pathSt = util.Stack()
+    expanded = []
+    children_dict = {}
+    frontier.push(problem.getStartState())
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if problem.isGoalState(node):
+            path = []
+            while not pathSt.isEmpty():
+                path.insert(0,pathSt.pop())
+            return path
+        if node not in expanded:
+            children = problem.expand(node)
+            children_dict[node] = children
+        else:
+            children = children_dict[node]
+        if node not in expanded:
+            expanded.append(node)
+
+        canExpand = 0
+        for nextState, action, cost in children:
+            if nextState not in expanded:
+                frontier.push(node)
+                node = nextState
+                frontier.push(node)
+                canExpand = 1
+                pathSt.push(action)
+                break
+        if not canExpand:
+            pathSt.pop()
+    return []
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    expanded = []
+    recorded = []
+    stateFatherDic = {}
+    stateActionDic = {}
+    frontier = util.Queue()
+    frontier.push(problem.getStartState())
+    recorded.append(problem.getStartState())
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if problem.isGoalState(node):
+            path = []
+            curNode = node
+            while curNode in stateFatherDic:
+                path.insert(0,stateActionDic[curNode])
+                curNode = stateFatherDic[curNode]
+            return path
+        if node not in expanded:
+            expanded.append(node)
+            children = problem.expand(node)
+            for nextState, action, cost in children:
+                if nextState not in recorded:
+                    stateFatherDic[nextState] = node
+                    stateActionDic[nextState] = action
+                    recorded.append(nextState)
+                    frontier.push(nextState)
+    return []
 
 def nullHeuristic(state, problem=None):
     """
@@ -130,7 +188,43 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    nodeFatherDic = {}
+    nodeActionDic = {}
+    #this cost not include cost from heuristic
+    nodeMinCost = {}
+    openSet = util.PriorityQueue()
+    
+    closeSet = []
+    openSet.push(problem.getStartState(),0)
+    nodeMinCost[problem.getStartState()] = 0
+    while not openSet.isEmpty():
+        node = openSet.pop()
+        closeSet.append(node)
+        #print("current node",node)
+        if problem.isGoalState(node):
+            #print("Goal")
+            path = []
+            curNode = node
+            while curNode in nodeFatherDic:
+                path.insert(0,nodeActionDic[curNode])
+                curNode = nodeFatherDic[curNode]
+            return path
+
+        children = problem.expand(node)
+        for nextState, action, cost in children:
+            if nextState not in closeSet:
+                pastCost = nodeMinCost[node] + cost
+                totalCost = nodeMinCost[node] + cost + heuristic(nextState,problem)
+                #print("nextState:",nextState,"cost:",totalCost)
+                if nextState not in nodeMinCost or nodeMinCost[nextState] > pastCost:
+                    #print("update nextState info, nextState:",nextState)
+                    nodeMinCost[nextState] = pastCost
+                    nodeFatherDic[nextState] = node
+                    nodeActionDic[nextState] = action
+                    openSet.update(nextState, totalCost)
+                    
+    return []
 
 
 # Abbreviations
