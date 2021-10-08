@@ -551,6 +551,41 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    x, y = position
+    if foodGrid.data[x][y] == True:
+        return 0
+    #from current position to nearest food, once find a food return
+    width = foodGrid.width
+    height = foodGrid.height
+    
+    if width > height:
+        expand_bound = width
+    else:
+        expand_bound = height
+    for i in range(expand_bound):
+        radius = i + 1
+        min_manhattan = 99999
+        for j in range(x-radius, x+radius+1):
+            if j < 0:
+                j = 0
+            elif j == width:
+                break
+
+            if foodGrid.data[j][max(0,y-radius)] == True or foodGrid.data[j][min(y+radius,height-1)] == True:
+                current_manhattan = abs(x-j) + radius
+                if current_manhattan < min_manhattan:
+                    min_manhattan = current_manhattan
+        for k in range(y-radius,y+radius):
+            if k < 0:
+                k = 0
+            elif k == height:
+                break
+            if foodGrid.data[min(x+radius,width-1)][k] == True or foodGrid.data[max(0,x-radius)][k] == True:
+                current_manhattan = abs(y-k) + radius
+                if current_manhattan < min_manhattan:
+                    min_manhattan = current_manhattan
+        if min_manhattan < 99999:
+            return min_manhattan*0.8
     return 0
 
 class ClosestDotSearchAgent(SearchAgent):
