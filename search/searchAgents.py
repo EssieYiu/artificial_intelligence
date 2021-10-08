@@ -325,9 +325,8 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        #如果是站在最后一个角落的点，则不用再expand
         curPos = state[0]
-        print("state[0]",state[0],"  state[1]:",state[1], "  state[1][1]:",state[1][1])
+        #print("state[0]",state[0],"  state[1]:",state[1], "  state[1][1]:",state[1][1])
         current_reached_corners = list(state[1][1])
         corner_pos_list = list(self.corners)
         if curPos in self.corners:
@@ -337,7 +336,6 @@ class CornersProblem(search.SearchProblem):
             if item == 0:
                 return False
         return True
-
 
     def expand(self, state):
         """
@@ -364,7 +362,6 @@ class CornersProblem(search.SearchProblem):
         if curPos in self.corners:
             idx = corner_pos_list.index(curPos)
             current_reached_corners[idx] = 1
-
         self._expanded += 1 # DO NOT CHANGE
         return children
 
@@ -391,7 +388,6 @@ class CornersProblem(search.SearchProblem):
         dx, dy = Actions.directionToVector(action)
         nextx, nexty = int(x + dx), int(y + dy)
         "*** YOUR CODE HERE ***"
-        # you will need to replace the None part of the following tuple.
         current_reached_corners = list(state[1][1])
         if (nextx, nexty) in self.corners:
             idx = self.corners.index((nextx,nexty))
@@ -440,7 +436,6 @@ def cornersHeuristic(state, problem):
             if estimated_manhattan_distance < min_manhattan_distance:
                 min_manhattan_distance = estimated_manhattan_distance
     return min_manhattan_distance
-    #return 0 # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -556,11 +551,6 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    #取曼哈顿距离，距离最近的食物的曼哈顿距离
-    x, y = position
-    if foodGrid.data[x][y] == True:
-        return 0
-    
     return 0
 
 class ClosestDotSearchAgent(SearchAgent):
