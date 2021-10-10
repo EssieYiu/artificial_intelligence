@@ -17,7 +17,6 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
-from sys import path
 import util
 
 class SearchProblem:
@@ -100,6 +99,7 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -114,7 +114,6 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    #注意不要多次同一个节点调用expand函数，每次expand之后记录其子节点用一个东西存起来
     frontier = util.Stack()
     pathSt = util.Stack()
     expanded = []
@@ -188,7 +187,6 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-
     nodeFatherDic = {}
     nodeActionDic = {}
     #this cost not include cost from heuristic

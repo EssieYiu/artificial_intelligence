@@ -40,6 +40,7 @@ from game import Actions
 import util
 import time
 import search
+import math
 
 class GoWestAgent(Agent):
     "An agent that goes West until it can't."
@@ -325,9 +326,8 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        #如果是站在最后一个角落的点，则不用再expand
         curPos = state[0]
-        print("state[0]",state[0],"  state[1]:",state[1], "  state[1][1]:",state[1][1])
+        #print("state[0]",state[0],"  state[1]:",state[1], "  state[1][1]:",state[1][1])
         current_reached_corners = list(state[1][1])
         corner_pos_list = list(self.corners)
         if curPos in self.corners:
@@ -337,7 +337,6 @@ class CornersProblem(search.SearchProblem):
             if item == 0:
                 return False
         return True
-
 
     def expand(self, state):
         """
@@ -364,7 +363,6 @@ class CornersProblem(search.SearchProblem):
         if curPos in self.corners:
             idx = corner_pos_list.index(curPos)
             current_reached_corners[idx] = 1
-
         self._expanded += 1 # DO NOT CHANGE
         return children
 
@@ -391,7 +389,6 @@ class CornersProblem(search.SearchProblem):
         dx, dy = Actions.directionToVector(action)
         nextx, nexty = int(x + dx), int(y + dy)
         "*** YOUR CODE HERE ***"
-        # you will need to replace the None part of the following tuple.
         current_reached_corners = list(state[1][1])
         if (nextx, nexty) in self.corners:
             idx = self.corners.index((nextx,nexty))
@@ -430,17 +427,26 @@ def cornersHeuristic(state, problem):
 
     "*** YOUR CODE HERE ***"
     current_position = state[0]
-    if current_position in corners:
+    if(problem.isGoalState(state)):
         return 0
     current_reached_corners = state[1][1]
-    min_manhattan_distance = 9999999
+
+    not_visited_corners = []
     for i in range(4):
         if current_reached_corners[i] == 0:
-            estimated_manhattan_distance = abs(current_position[0] - corners[i][0]) + abs(current_position[1] - corners[i][1])
-            if estimated_manhattan_distance < min_manhattan_distance:
-                min_manhattan_distance = estimated_manhattan_distance
-    return min_manhattan_distance
-    #return 0 # Default to trivial solution
+            not_visited_corners.append(corners[i])
+    
+    total_cost = 0
+    while len(not_visited_corners):
+        to_one_corner_cost = 99999
+        for c in not_visited_corners:
+            if abs(c[0] - current_position[0]) + abs(c[1] - current_position[1]) < to_one_corner_cost:
+                to_one_corner_cost = abs(c[0] - current_position[0]) + abs(c[1] - current_position[1])
+                next_corner = c
+        current_position = next_corner
+        total_cost += to_one_corner_cost
+        not_visited_corners.remove(current_position)
+    return total_cost
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -556,43 +562,23 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    #取曼哈顿距离，距离最近的食物的曼哈顿距离
-    x, y = position
-    if foodGrid.data[x][y] == True:
-        return 0
-    #from current position to nearest food, once find a food return
-    width = foodGrid.width
-    height = foodGrid.height
-    
-    if width > height:
-        expand_bound = width
-    else:
-        expand_bound = height
-    for i in range(expand_bound):
-        radius = i + 1
-        min_manhattan = 99999
-        for j in range(x-radius, x+radius+1):
-            if j < 0:
-                j = 0
-            elif j == width:
-                break
-
-            if foodGrid.data[j][max(0,y-radius)] == True or foodGrid.data[j][min(y+radius,height-1)] == True:
-                current_manhattan = abs(x-j) + radius
-                if current_manhattan < min_manhattan:
-                    min_manhattan = current_manhattan
-        for k in range(y-radius,y+radius):
-            if k < 0:
-                k = 0
-            elif k == height:
-                break
-            if foodGrid.data[min(x+radius,width-1)][k] == True or foodGrid.data[max(0,x-radius)][k] == True:
-                current_manhattan = abs(y-k) + radius
-                if current_manhattan < min_manhattan:
-                    min_manhattan = current_manhattan
-        if min_manhattan < 99999:
-            return min_manhattan*0.5
-    return 0
+    foodGridList = foodGrid.asList()
+    farthest_food = position
+    farthest_distance = 0
+    for food in foodGridList:
+        if abs(position[0] - food[0]) + abs(position[1] - food[1]) > farthest_distance:
+            farthest_food = food
+            farthest_distance = abs(position[0] - food[0]) + abs(position[1] - food[1])
+    diff = position[0] - farthest_food[0]
+    count = 0
+    for food in foodGridList:
+        if diff > 0 and position[0] < food[0]:
+            count += 1
+        elif diff < 0 and position[0] > food[0]:
+            count += 1
+        elif diff == 0 and position[0] != food[0]:
+            count += 1
+    return farthest_distance + count
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -623,7 +609,15 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        path = []
+        foodGridList = food.asList()
+        closest = foodGridList.pop()
+        for f in foodGridList:
+            if abs(f[0] - startPosition[0]) + abs(f[1] - startPosition[1]) < abs(closest[0] - startPosition[0]) + abs(closest[1] - startPosition[1]):
+                closest = f
+        problem.goal = closest
+        path = search.aStarSearch(problem, manhattanHeuristic)
+        return path
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -659,7 +653,8 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        return self.goal == state
 
 def mazeDistance(point1, point2, gameState):
     """
