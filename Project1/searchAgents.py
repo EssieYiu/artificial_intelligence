@@ -356,13 +356,14 @@ class CornersProblem(search.SearchProblem):
             "*** YOUR CODE HERE ***"
             next_state = self.getNextState(state,action)
             children.append((next_state,action,1))
-
+        '''
         curPos = state[0]
         corner_pos_list = list(self.corners)
         current_reached_corners = list(state[1][1])
         if curPos in self.corners:
             idx = corner_pos_list.index(curPos)
             current_reached_corners[idx] = 1
+        '''
         self._expanded += 1 # DO NOT CHANGE
         return children
 
